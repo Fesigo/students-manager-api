@@ -40,6 +40,16 @@ export class UserService {
       });
   }
 
+  async findOneByEmail(email: string) {
+    return await this.prismaService.user
+      .findUniqueOrThrow({
+        where: { email },
+      })
+      .catch(() => {
+        throw new NotFoundException(`User not Found!`);
+      });
+  }
+
   async update(id: number, updateUserDto: UpdateUserDto) {
     await this.findOne(id);
 
