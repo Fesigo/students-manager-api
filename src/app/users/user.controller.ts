@@ -83,7 +83,6 @@ export class UserController {
     status: HttpStatus.OK,
     description: 'Success',
     type: FindUserSwagger,
-    isArray: true,
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
