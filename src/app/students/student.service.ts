@@ -6,7 +6,9 @@ import {
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { PrismaService } from 'src/db/prisma.service';
-import { Student } from '@prisma/client';
+import { Prisma, Student } from '@prisma/client';
+import { FindAllStudentsDto } from './dto/findAll-students.dto';
+import { processPaginationParams } from 'src/utils/paginationParams';
 
 @Injectable()
 export class StudentService {
@@ -25,8 +27,27 @@ export class StudentService {
     return student;
   }
 
-  async findAll(userId: number): Promise<Student[]> {
-    return this.prismaService.student.findMany({ where: { userId } });
+  async findAll(
+    userId: number,
+    query: FindAllStudentsDto,
+  ): Promise<Partial<Student>[]> {
+    const paginationParamsProcessed = processPaginationParams(
+      query.limit,
+      query.page,
+      query.select,
+    );
+
+    const options = {
+      where: { userId },
+      ...paginationParamsProcessed,
+      orderBy: {
+        [query.orderBy || 'name']: (
+          query.order || 'ASC'
+        ).toLowerCase() as Prisma.SortOrder,
+      },
+    };
+
+    return this.prismaService.student.findMany(options);
   }
 
   async findOne(id: number, userId: number): Promise<Student> {
