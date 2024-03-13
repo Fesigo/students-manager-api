@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/db/prisma.service';
@@ -13,6 +17,16 @@ export class UserService {
   async create(
     createUserDto: CreateUserDto,
   ): Promise<Omit<User, 'password' | 'updatedAt'>> {
+    const emailExists = await this.prismaService.user.findUnique({
+      where: { email: createUserDto.email },
+    });
+
+    if (emailExists) {
+      throw new ConflictException(
+        'There is already a User registered with this email!',
+      );
+    }
+
     const user = await this.prismaService.user.create({
       data: {
         name: createUserDto.name,
@@ -52,6 +66,16 @@ export class UserService {
 
   async update(id: number, updateUserDto: UpdateUserDto) {
     await this.findOne(id);
+
+    const emailExists = await this.prismaService.user.findUnique({
+      where: { email: updateUserDto.email },
+    });
+
+    if (emailExists && emailExists.id != id) {
+      throw new ConflictException(
+        'There is already a User registered with this email!',
+      );
+    }
 
     return await this.prismaService.user.update({
       where: { id },
